@@ -7,10 +7,11 @@ from Day06 import day06
 from Day07 import day07
 from Day08 import day08
 from Day09 import day09
+from Day10 import day10
 
 if __name__ == '__main__':
-    input_file = "./inputs/real-09.txt"
-    day = "09"
+    input_file = "./inputs/test-10c.txt"
+    day = "10"
     part2 = True
 
     day_functions = {
@@ -23,9 +24,10 @@ if __name__ == '__main__':
         "07": day07,
         "08": day08,
         "09": day09,
+        "10": day10,
     }
 
     answer = day_functions[day](input_file, part2)
     print(f"Answer: {answer}")
 
-#105276 too low
+    #619 too high
