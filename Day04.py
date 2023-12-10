@@ -1,6 +1,5 @@
 from collections import deque
 
-
 def day04(input_file, is_part_2):
     file = open(input_file, 'r')
     lines = file.readlines()
