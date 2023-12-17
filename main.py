@@ -8,10 +8,17 @@ from Day07 import day07
 from Day08 import day08
 from Day09 import day09
 from Day10 import day10
+from Day11 import day11
+from Day12 import day12
+from Day13 import day13
+from Day14 import day14
+from Day15 import day15
+from Day16 import day16
+from Day17 import day17
 
 if __name__ == '__main__':
-    input_file = "./inputs/test-10c.txt"
-    day = "10"
+    input_file = "./inputs/real-17.txt"
+    day = "17"
     part2 = True
 
     day_functions = {
@@ -25,9 +32,14 @@ if __name__ == '__main__':
         "08": day08,
         "09": day09,
         "10": day10,
+        "11": day11,
+        "12": day12,
+        "13": day13,
+        "14": day14,
+        "15": day15,
+        "16": day16,
+        "17": day17
     }
 
     answer = day_functions[day](input_file, part2)
     print(f"Answer: {answer}")
-
-    #619 too high

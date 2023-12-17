@@ -14,6 +14,8 @@ def day10(input_file, is_part_2):
         cols = list()
         for char in clean_line:
             node = Node()
+            node.original = True
+            node.character = char
 
             if char == "|":
                 node.north_open = True
@@ -50,15 +52,126 @@ def day10(input_file, is_part_2):
     s_node.east_open = can_access(rows, x, y, "East")
     s_node.west_open = can_access(rows, x, y, "West")
 
-    if is_part_2:
+    max_steps = 0
+    queue = deque()
+    visited = dict()
+    first_command = Command()
+    first_command.x = x
+    first_command.y = y
+    first_command.steps = 0
+    queue.append(first_command)
+
+    while len(queue) > 0:
+        command = queue.popleft()
+
+        key = f"{command.y}-{command.x}"
+        if key in visited:
+            if visited[key] > command.steps:
+                visited[key] = command.steps
+
+                max_steps = max(max_steps, visited[key])
+
+            continue
+        else:
+            visited[key] = command.steps
+            node = rows[command.y][command.x]
+            node.main_loop = True
+            max_steps = max(max_steps, visited[key])
+
+            if node.north_open:
+                new_command = Command()
+                new_command.steps = command.steps + 1
+                new_command.y = command.y - 1
+                new_command.x = command.x
+                queue.append(new_command)
+
+            if node.south_open:
+                new_command = Command()
+                new_command.steps = command.steps + 1
+                new_command.y = command.y + 1
+                new_command.x = command.x
+                queue.append(new_command)
+
+            if node.west_open:
+                new_command = Command()
+                new_command.steps = command.steps + 1
+                new_command.y = command.y
+                new_command.x = command.x - 1
+                queue.append(new_command)
+
+            if node.east_open:
+                new_command = Command()
+                new_command.steps = command.steps + 1
+                new_command.y = command.y
+                new_command.x = command.x + 1
+                queue.append(new_command)
+
+    if not is_part_2:
+        return max_steps
+    else:
+        new_rows = list()
+        for row in rows:
+            new_row = list()
+
+            for col in row:
+                new_row.append(col)
+
+                new_col = Node()
+                new_col.is_empty = True
+                new_row.append(new_col)
+
+            new_rows.append(new_row)
+
+            new_row = list()
+            for i in range(len(row) * 2):
+                col = Node()
+                col.is_empty = True
+                new_row.append(col)
+
+            new_rows.append(new_row)
+
+        i = 0
+        j = 0
+        width = len(new_rows[0])
+        height = len(new_rows)
+
+        for row in new_rows:
+            row_string = ""
+            for col in row:
+                if col.original:
+                    row_string += "#"
+                else:
+                    row_string += "."
+
+        while i < height:
+            j = 0
+            while j < width:
+                node = new_rows[i][j]
+                if node.main_loop:
+                    if node.north_open and i >= 2:
+                        new_rows[i - 1][j].main_loop = True
+                        new_rows[i - 2][j].main_loop = True
+                    if node.south_open:
+                        new_rows[i + 1][j].main_loop = True
+                        new_rows[i + 2][j].main_loop = True
+                    if node.west_open and j >= 2:
+                        new_rows[i][j - 1].main_loop = True
+                        new_rows[i][j - 2].main_loop = True
+                    if node.east_open:
+                        new_rows[i][j+1].main_loop = True
+                        new_rows[i][j + 2].main_loop = True
+
+                j = j + 2
+            i = i + 2
+
         # Find first empty node
         x = 0
         y = 0
-        for row in rows:
+        for row in new_rows:
             x = 0
             found = False
             for col in row:
-                if col.is_empty:
+                if not col.main_loop:
                     found = True
                     break
 
@@ -81,84 +194,23 @@ def day10(input_file, is_part_2):
             if key in visited:
                 continue
 
-            node = rows[command.y][command.x]
+            node = new_rows[command.y][command.x]
             node.flooded = True
             visited[key] = True
 
-            add_to_fill_queue(queue, rows, command.x, command.y, "North")
-            add_to_fill_queue(queue, rows, command.x, command.y, "South")
-            add_to_fill_queue(queue, rows, command.x, command.y, "East")
-            add_to_fill_queue(queue, rows, command.x, command.y, "West")
+            add_to_fill_queue(queue, new_rows, command.x, command.y, "North")
+            add_to_fill_queue(queue, new_rows, command.x, command.y, "South")
+            add_to_fill_queue(queue, new_rows, command.x, command.y, "East")
+            add_to_fill_queue(queue, new_rows, command.x, command.y, "West")
 
-        flooded_count = 0
-        for i in range(len(rows)):
-            for j in range(len(rows[i])):
-                node = rows[i][j]
-                if node.flooded:
-                    flooded_count += 1
+        count = 0
+        for i in range(len(new_rows)):
+            for j in range(len(new_rows[i])):
+                node = new_rows[i][j]
+                if node.original and not node.main_loop and not node.flooded:
+                    count += 1
 
-        total_count = len(rows) * len(rows[0])
-        return total_count - flooded_count
-
-    else:
-
-        max_steps = 0
-        queue = deque()
-        visited = dict()
-        first_command = Command()
-        first_command.x = x
-        first_command.y = y
-        first_command.steps = 0
-        queue.append(first_command)
-
-        while len(queue) > 0:
-            command = queue.popleft()
-
-            key = f"{command.y}-{command.x}"
-            if key in visited:
-                if visited[key] > command.steps:
-                    visited[key] = command.steps
-
-                    max_steps = max(max_steps, visited[key])
-
-                continue
-            else:
-                visited[key] = command.steps
-                node = rows[command.y][command.x]
-                max_steps = max(max_steps, visited[key])
-
-                if node.north_open:
-                    new_command = Command()
-                    new_command.steps = command.steps + 1
-                    new_command.y = command.y - 1
-                    new_command.x = command.x
-                    queue.append(new_command)
-
-                if node.south_open:
-                    new_command = Command()
-                    new_command.steps = command.steps + 1
-                    new_command.y = command.y + 1
-                    new_command.x = command.x
-                    queue.append(new_command)
-
-                if node.west_open:
-                    new_command = Command()
-                    new_command.steps = command.steps + 1
-                    new_command.y = command.y
-                    new_command.x = command.x - 1
-                    queue.append(new_command)
-
-                if node.east_open:
-                    new_command = Command()
-                    new_command.steps = command.steps + 1
-                    new_command.y = command.y
-                    new_command.x = command.x + 1
-                    queue.append(new_command)
-
-        return max_steps
-
-
-
+        return count
 
 
 def can_access(rows, x, y, direction):
@@ -211,39 +263,12 @@ def add_to_fill_queue(queue, rows, x, y, direction):
     if new_x < 0 or new_x >= len(rows[0]) or new_y < 0 or new_y >= len(rows):
         return
 
-    old_node = rows[y][x]
-    if not old_node.is_empty:
-        if direction == "North" and not old_node.north_open:
-            return
-        elif direction == "South" and not old_node.south_open:
-            return
-        elif direction == "West" and not old_node.west_open:
-            return
-        elif direction == "East" and not old_node.east_open:
-            return
-
     node = rows[new_y][new_x]
-    if node.is_empty:
+    if not node.main_loop:
         command = Command()
         command.x = new_x
         command.y = new_y
         queue.append(command)
-    else:
-        connecting_pipe = False
-        if direction == "North" and node.south_open:
-            connecting_pipe = True
-        elif direction == "South" and node.north_open:
-            connecting_pipe = True
-        elif direction == "West" and node.east_open:
-            connecting_pipe = True
-        elif direction == "East" and node.west_open:
-            connecting_pipe = True
-
-        if connecting_pipe:
-            command = Command()
-            command.x = new_x
-            command.y = new_y
-            queue.append(command)
 
 
 class Command:
@@ -254,6 +279,8 @@ class Command:
 
 
 class Node:
+    character = ""
+    original = False
     north_open = False
     east_open = False
     south_open = False
@@ -261,6 +288,7 @@ class Node:
     is_s = False
     is_empty = False
     flooded = False
+    main_loop = False
 
     x = 0
     y = 0
